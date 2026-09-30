@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "skills": {
+    "android-architecture-clean": {
+      "source": "krutikjain/android-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/android-architecture-clean/SKILL.md",
+      "computedHash": "1f9c77b78014edb420a6b45f9d70aa4a4388eeb802635aa1104362f5bbba429d"
+    },
+    "android-compose-foundations": {
+      "source": "krutikjain/android-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/android-compose-foundations/SKILL.md",
+      "computedHash": "9812f08ec902b05aeccd9f508aaba69ad5564e7ad9d7c12dcc3d913950fa76cf"
+    },
+    "android-coroutines-flow": {
+      "source": "krutikjain/android-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/android-coroutines-flow/SKILL.md",
+      "computedHash": "2ac5dbdc76b1375cfcb16793265b5b0eaa0ba8c20c24a00e47cdc1aab678fb4c"
+    },
+    "android-gradle-build-logic": {
+      "source": "krutikjain/android-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/android-gradle-build-logic/SKILL.md",
+      "computedHash": "5162635b20ca431e1c850192d1a65baab0e62c0962841b76eb742c9e5bec0c86"
+    },
+    "android-kotlin-core": {
+      "source": "krutikjain/android-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/android-kotlin-core/SKILL.md",
+      "computedHash": "d9c552a3cb35db956f4d9162f15ffbbcea862451198f38f51d58d3ecd6a0c2dc"
+    }
+  }
+}

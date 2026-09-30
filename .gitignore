@@ -1,0 +1,21 @@
+.gradle/
+build/
+local.properties
+.idea/
+.DS_Store
+captures/
+*.iml
+
+# Credenciales de la base de origen
+.env
+
+# La base exportada son 43 MB: se regenera con tools/export-db.
+# El .sha256 sí se versiona, para detectar cuándo hay que regenerarla.
+data/*.db
+data/*.db.tmp
+androidApp/src/main/assets/*.db
+
+# venv del exportador
+tools/export-db/.venv/
+__pycache__/
+*.pyc

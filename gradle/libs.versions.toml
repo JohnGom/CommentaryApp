@@ -1,0 +1,60 @@
+[versions]
+# Matriz fijada a propósito, no "lo último":
+#   Kotlin 2.4.20 está probado con AGP 8.5.2–9.3.1  -> AGP 9.3.1, no 9.4.x
+#   KGP 2.4.20 soporta Gradle <= 9.7.0 y AGP 9.3 exige >= 9.5 -> Gradle 9.7
+kotlin = "2.4.20"
+agp = "9.3.1"
+composeMultiplatform = "1.12.1"
+
+compileSdk = "37"
+targetSdk = "37"
+minSdk = "24"
+
+lifecycle = "2.11.0"
+navigationCompose = "2.10.0-beta01"
+androidxSqlite = "2.7.1"
+datastore = "1.2.1"
+koin = "4.2.2"
+coroutines = "1.11.0"
+serialization = "1.11.0"
+
+androidxActivityCompose = "1.13.0"
+androidxCoreKtx = "1.18.0"
+androidxSplashscreen = "1.2.0"
+
+[plugins]
+kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
+androidApplication = { id = "com.android.application", version.ref = "agp" }
+androidKmpLibrary = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
+
+[libraries]
+# androidx multiplataforma (los publica JetBrains bajo org.jetbrains.androidx)
+lifecycle-viewmodel = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel", version.ref = "lifecycle" }
+lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
+lifecycle-runtime-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
+navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+
+# datos: sqlite-bundled compila SQLite desde fuente, así el tokenizer FTS5
+# (remove_diacritics 2) es idéntico en el build, en Android y en iOS
+androidx-sqlite = { module = "androidx.sqlite:sqlite", version.ref = "androidxSqlite" }
+androidx-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "androidxSqlite" }
+datastore-preferences-core = { module = "androidx.datastore:datastore-preferences-core", version.ref = "datastore" }
+
+koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin" }
+koin-core = { module = "io.insert-koin:koin-core" }
+koin-compose = { module = "io.insert-koin:koin-compose" }
+koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel" }
+koin-compose-viewmodel-navigation = { module = "io.insert-koin:koin-compose-viewmodel-navigation" }
+koin-android = { module = "io.insert-koin:koin-android" }
+
+coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
+coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
+serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
+
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidxActivityCompose" }
+androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidxCoreKtx" }
+androidx-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "androidxSplashscreen" }

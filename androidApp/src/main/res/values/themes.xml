@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- El tema real lo pinta Compose; esto solo evita el flash blanco del
+         arranque y da el fondo "papel" de la paleta Tinta y Papel. -->
+    <style name="Theme.Comentario" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">#FBF8F3</item>
+    </style>
+</resources>
