@@ -11,9 +11,9 @@ captures/
 
 # La base exportada son 43 MB: se regenera con tools/export-db.
 # El .sha256 sí se versiona, para detectar cuándo hay que regenerarla.
+# (el asset empaquetado lo genera Gradle en build/, ya ignorado)
 data/*.db
 data/*.db.tmp
-androidApp/src/main/assets/*.db
 
 # venv del exportador
 tools/export-db/.venv/

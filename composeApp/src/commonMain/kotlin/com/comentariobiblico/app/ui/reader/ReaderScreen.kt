@@ -58,7 +58,10 @@ fun ReaderScreen(
     chapter: Int,
     verse: Int,
     query: String?,
-    onNavigate: (VerseId) -> Unit,
+    /** Avanzar o retroceder de versículo: sustituye la pantalla actual. */
+    onMove: (VerseId) -> Unit,
+    /** Seguir una cita del comentario: apila, para poder volver a lo que se leía. */
+    onReference: (VerseId) -> Unit,
     onSettings: () -> Unit,
     onBack: () -> Unit,
     viewModel: ReaderViewModel = koinViewModel(),
@@ -94,7 +97,7 @@ fun ReaderScreen(
                     reference = data.current.verse.reference,
                     previous = data.current.previous,
                     next = data.current.next,
-                    onNavigate = onNavigate,
+                    onMove = onMove,
                 )
             }
         },
@@ -116,10 +119,10 @@ fun ReaderScreen(
                     item {
                         NoCommentState(
                             onPrevious = {
-                                viewModel.jumpToCommented(forward = false) { it?.let(onNavigate) }
+                                viewModel.jumpToCommented(forward = false) { it?.let(onMove) }
                             },
                             onNext = {
-                                viewModel.jumpToCommented(forward = true) { it?.let(onNavigate) }
+                                viewModel.jumpToCommented(forward = true) { it?.let(onMove) }
                             },
                         )
                     }
@@ -128,7 +131,7 @@ fun ReaderScreen(
                         CommentBlockText(
                             block = block,
                             context = verseId,
-                            onReference = onNavigate,
+                            onReference = onReference,
                         )
                     }
 
@@ -233,7 +236,7 @@ private fun ReaderBottomBar(
     reference: String,
     previous: VerseId?,
     next: VerseId?,
-    onNavigate: (VerseId) -> Unit,
+    onMove: (VerseId) -> Unit,
 ) {
     BottomAppBar {
         Row(
@@ -241,7 +244,7 @@ private fun ReaderBottomBar(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(
-                onClick = { previous?.let(onNavigate) },
+                onClick = { previous?.let(onMove) },
                 enabled = previous != null,
             ) {
                 Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, "Versículo anterior")
@@ -255,7 +258,7 @@ private fun ReaderBottomBar(
             )
 
             IconButton(
-                onClick = { next?.let(onNavigate) },
+                onClick = { next?.let(onMove) },
                 enabled = next != null,
             ) {
                 Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, "Versículo siguiente")

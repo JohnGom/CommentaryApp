@@ -8,7 +8,6 @@ import com.comentariobiblico.app.domain.model.BookIntro
 import com.comentariobiblico.app.domain.model.Chapter
 import com.comentariobiblico.app.domain.model.ChapterId
 import com.comentariobiblico.app.domain.model.Comment
-import com.comentariobiblico.app.domain.model.CommentBlock
 import com.comentariobiblico.app.domain.model.SearchCounts
 import com.comentariobiblico.app.domain.model.SearchHit
 import com.comentariobiblico.app.domain.model.SearchKind
@@ -17,7 +16,6 @@ import com.comentariobiblico.app.domain.model.Verse
 import com.comentariobiblico.app.domain.model.VerseId
 import com.comentariobiblico.app.domain.model.VerseWithComment
 import kotlinx.coroutines.Deferred
-import kotlinx.serialization.json.Json
 
 /**
  * Todo el SQL de la app, en un sitio.
@@ -273,70 +271,14 @@ class CommentaryDao(private val opening: Deferred<AppDatabase>) {
         ) { row ->
             Comment(
                 verseId = id,
-                blocks = toBlocks(row.getText(0), row.getText(1)),
+                blocks = parseCommentBlocks(row.getText(0), row.getText(1)),
                 egwReferences = row.getText(2),
                 isCrossReference = row.getLong(3) == 1L,
             )
         }
     }
 
-    /**
-     * El exportador ya separó el comentario en bloques (unidos por "\n\n") y
-     * apuntó dónde empieza y cuánto mide el lema de cada uno.
-     */
-    private fun toBlocks(marked: String, spansJson: String): List<CommentBlock> {
-        // Se quitan primero las marcas de resaltado: `highlight()` las inserta
-        // dentro del texto y desplazaría todos los offsets de los lemas, que se
-        // calcularon sobre el cuerpo limpio.
-        val (body, highlights) = parseHighlights(marked)
-
-        val spans = runCatching { json.decodeFromString<List<List<Int>>>(spansJson) }
-            .getOrDefault(emptyList())
-        val starts = spans.associate { it[0] to it[1] }
-
-        var offset = 0
-        return body.split(BLOCK_SEPARATOR).map { chunk ->
-            val blockStart = offset
-            val length = starts[blockStart]
-            offset += chunk.length + BLOCK_SEPARATOR.length
-
-            // El lema se guardó sin el punto final; se le devuelve aquí para
-            // que la interfaz lo pinte tal como aparece en el libro.
-            val lemmaLength = when {
-                length == null || length > chunk.length -> 0
-                chunk.getOrNull(length) == '.' -> length + 1
-                else -> length
-            }
-            val text = chunk.substring(lemmaLength).trimStart()
-            val bodyOffset = chunk.length - text.length
-
-            CommentBlock(
-                lemma = if (lemmaLength == 0) null else chunk.substring(0, lemmaLength),
-                text = text,
-                highlights = highlights.toBlockRanges(blockStart, chunk.length, bodyOffset),
-            )
-        }
-    }
-
-    /** Traslada los tramos resaltados del cuerpo completo a un bloque concreto. */
-    private fun List<IntRange>.toBlockRanges(
-        blockStart: Int,
-        blockLength: Int,
-        textOffset: Int,
-    ): List<IntRange> {
-        if (isEmpty()) return emptyList()
-        val blockEnd = blockStart + blockLength
-        return mapNotNull { range ->
-            if (range.first < blockStart || range.last >= blockEnd) return@mapNotNull null
-            val start = range.first - blockStart - textOffset
-            val end = range.last - blockStart - textOffset
-            if (start < 0) null else start..end
-        }
-    }
-
     private companion object {
-        const val BLOCK_SEPARATOR = "\n\n"
-        val json = Json { ignoreUnknownKeys = true }
 
         /**
          * Busca en comentarios y versículos a la vez.

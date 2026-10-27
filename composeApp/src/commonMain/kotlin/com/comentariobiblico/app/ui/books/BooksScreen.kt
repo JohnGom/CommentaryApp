@@ -1,5 +1,6 @@
 package com.comentariobiblico.app.ui.books
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,8 +13,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
@@ -29,9 +30,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -40,7 +45,6 @@ import com.comentariobiblico.app.domain.model.Book
 import com.comentariobiblico.app.domain.model.VerseId
 import com.comentariobiblico.app.ui.common.StateHost
 import com.comentariobiblico.app.ui.common.TABULAR_FIGURES
-import com.comentariobiblico.app.ui.common.SectionHeader
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,6 +60,11 @@ fun BooksScreen(
     val filter by viewModel.filter.collectAsStateWithLifecycle()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
+    // Sobreviven a la rotación y a volver desde otra pantalla: plegar una
+    // sección es una decisión del usuario, no un detalle de composición.
+    var oldOpen by rememberSaveable { mutableStateOf(true) }
+    var newOpen by rememberSaveable { mutableStateOf(true) }
+
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
@@ -70,6 +79,10 @@ fun BooksScreen(
         },
     ) { padding ->
         StateHost(state, Modifier.padding(padding)) { books ->
+            // Mientras se filtra se abren las dos secciones: esconder la
+            // coincidencia que el usuario acaba de pedir sería absurdo.
+            val filtering = filter.isNotBlank()
+
             LazyColumn {
                 item {
                     OutlinedTextField(
@@ -87,17 +100,96 @@ fun BooksScreen(
                     }
                 }
 
-                if (books.oldTestament.isNotEmpty()) {
-                    stickyHeader { SectionHeader("Antiguo Testamento") }
-                    items(books.oldTestament, key = { it.id }) { BookRow(it, onBook) }
-                }
+                testamentSection(
+                    title = "Antiguo Testamento",
+                    books = books.oldTestament,
+                    expanded = filtering || oldOpen,
+                    onToggle = { oldOpen = !oldOpen },
+                    onBook = onBook,
+                )
 
-                if (books.newTestament.isNotEmpty()) {
-                    stickyHeader { SectionHeader("Nuevo Testamento") }
-                    items(books.newTestament, key = { it.id }) { BookRow(it, onBook) }
-                }
+                testamentSection(
+                    title = "Nuevo Testamento",
+                    books = books.newTestament,
+                    expanded = filtering || newOpen,
+                    onToggle = { newOpen = !newOpen },
+                    onBook = onBook,
+                )
             }
         }
+    }
+}
+
+/**
+ * Una sección plegable del listado.
+ *
+ * Los libros se añaden como elementos sueltos de la LazyColumn y no dentro de
+ * un contenedor: así siguen componiéndose de forma perezosa y plegar la
+ * sección deja de componerlos en vez de limitarse a ocultarlos.
+ */
+private fun androidx.compose.foundation.lazy.LazyListScope.testamentSection(
+    title: String,
+    books: List<Book>,
+    expanded: Boolean,
+    onToggle: () -> Unit,
+    onBook: (Int) -> Unit,
+) {
+    if (books.isEmpty()) return
+
+    stickyHeader(key = title) {
+        AccordionHeader(
+            title = title,
+            count = books.size,
+            expanded = expanded,
+            onToggle = onToggle,
+        )
+    }
+
+    if (expanded) {
+        items(books, key = { it.id }) { BookRow(it, onBook) }
+    }
+}
+
+@Composable
+private fun AccordionHeader(
+    title: String,
+    count: Int,
+    expanded: Boolean,
+    onToggle: () -> Unit,
+) {
+    val rotation by animateFloatAsState(
+        targetValue = if (expanded) 0f else -90f,
+        label = "chevron",
+    )
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.background)
+            .clickable(onClick = onToggle)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Icon(
+            imageVector = Icons.Default.ExpandMore,
+            contentDescription = if (expanded) "Plegar $title" else "Desplegar $title",
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(20.dp).rotate(rotation),
+        )
+        Text(
+            text = title.uppercase(),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f),
+        )
+        Text(
+            text = count.toString(),
+            style = MaterialTheme.typography.labelMedium.copy(
+                fontFeatureSettings = TABULAR_FIGURES,
+            ),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 

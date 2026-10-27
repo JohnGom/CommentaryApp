@@ -42,16 +42,32 @@ _EGW = re.compile(
     re.IGNORECASE | re.DOTALL,
 )
 
-# Candidato a lema: frase capitalizada, sin puntuación interna fuerte,
-# al principio del texto o justo después de un punto.
+# Candidato a lema: frase breve al principio del texto o justo después de un
+# signo de puntuación fuerte.
+#
+# Termina en ".", "?" o "!", no solo en punto: buena parte de los lemas son
+# preguntas citadas del versículo ("¿Dónde estás tú?", "¿Qué has hecho?") y
+# exigir punto dejaba 600 comentarios sin encabezado.
+#
+# El tramo "(?:\.{3}...)?" permite los puntos suspensivos con que la obra
+# abrevia una cita larga ("Del fruto... podemos comer.").
 _LEMMA = re.compile(
-    r'(?:\A|(?<=[.!?]\s))([A-ZÁÉÍÓÚÜÑ¿¡"][^.!?]{0,70}?)\.\s'
+    r'(?:\A|(?<=[.!?]\s))'
+    r'([¿¡"]?[A-Za-zÁÉÍÓÚÜÑáéíóúüñ][^.!?]{0,90}?(?:\.{3}[^.!?]{0,40}?)?)'
+    r'[.?!]\s'
 )
 
 _CROSSREF = re.compile(r"\bver\s+com\.", re.IGNORECASE)
 
-MAX_LEMMA_WORDS = 7
+MAX_LEMMA_WORDS = 10
 CROSSREF_MAX_LEN = 60
+
+# Proporción de palabras del candidato que deben aparecer en el versículo
+# cuando no coincide literalmente. Medido sobre el corpus: por debajo de 0,75
+# empiezan a colarse candidatos que se tragan la frase siguiente porque al
+# original le falta el punto tras el lema.
+MIN_WORD_OVERLAP = 0.75
+MIN_CONTENT_WORD = 4
 
 
 def clean(text: str | None) -> str:
@@ -107,14 +123,12 @@ def split_comment(body: str, verse_text: str) -> tuple[str, list[list[int]], str
             body = remainder
 
     haystack = f" {fold(verse_text)} "
+    verse_words = set(haystack.split())
     cuts: list[tuple[int, int]] = []
     if haystack.strip():
         for m in _LEMMA.finditer(body):
             candidate = m.group(1)
-            if len(candidate.split()) > MAX_LEMMA_WORDS:
-                continue
-            folded = fold(candidate)
-            if folded and f" {folded} " in haystack:
+            if _is_lemma(candidate, haystack, verse_words):
                 cuts.append((m.start(1), len(candidate)))
 
     if not cuts:
@@ -144,6 +158,58 @@ def split_comment(body: str, verse_text: str) -> tuple[str, list[list[int]], str
         offset += len(chunk) + 2  # el "\n\n" que los une
 
     return "\n\n".join(chunk for chunk, _ in blocks), spans, egw
+
+
+def _is_lemma(candidate: str, haystack: str, verse_words: set[str]) -> bool:
+    """¿Este candidato es de verdad una cita del versículo?
+
+    Es el filtro que separa un lema ("Bienaventurados.") de la primera frase
+    cualquiera de una explicación ("Gr. makários.").
+
+    Dos reglas, y basta con cumplir una:
+
+    (a) El candidato aparece literal en el versículo. Cubre los lemas de una
+        sola palabra corta ("Set.", "Noé.", "Bet-el.") que la regla (b)
+        descartaría por no tener ninguna palabra de peso.
+
+    (b) Casi todas sus palabras aparecen en el versículo. Cubre lo que la
+        comparación literal no puede: contracciones de la cita ("Salió Caín."
+        por "Salió, pues, Caín de delante de Jehová"), singulares por plurales
+        ("Estrella." por "las estrellas") y erratas del OCR en el texto bíblico
+        ("Edificó" por "ediificó"). Se exige además una palabra de contenido
+        para que un "Y dijo." no se cuele por estar hecho de palabras comunes.
+    """
+    folded = fold(candidate)
+    if not folded:
+        return False
+
+    words = folded.split()
+    if len(words) > MAX_LEMMA_WORDS:
+        return False
+
+    if f" {folded} " in haystack:
+        return True
+
+    matched = 0
+    has_content_word = False
+    for word in words:
+        if _appears_in(word, verse_words):
+            matched += 1
+            if len(word) >= MIN_CONTENT_WORD:
+                has_content_word = True
+
+    return has_content_word and matched / len(words) >= MIN_WORD_OVERLAP
+
+
+def _appears_in(word: str, verse_words: set[str]) -> bool:
+    """Coincidencia por prefijo, para tolerar plurales y formas flexionadas."""
+    if word in verse_words:
+        return True
+    return any(
+        (len(word) >= MIN_CONTENT_WORD and other.startswith(word))
+        or (len(other) >= MIN_CONTENT_WORD and word.startswith(other))
+        for other in verse_words
+    )
 
 
 def is_crossreference(body: str) -> bool:

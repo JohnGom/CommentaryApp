@@ -35,9 +35,14 @@ reescribe.
 3. **Los comentarios son secuencias de lemas, no texto corrido.** Cada uno encadena bloques con
    la forma `Lema citado del versículo. Explicación…` sin ningún separador: Mateo 5:3 mete
    `Bienaventurados.` + `Pobres.` + `De ellos.` + `El reino de los cielos.` en 3.900 caracteres
-   seguidos. Se detectan exigiendo que la forma plegada del candidato **aparezca en el texto del
-   versículo** — ese filtro es el que descarta falsos positivos como `Gr. makários.`
-   Resultado: **96,1%** de los comentarios quedan segmentados. El body se guarda con los bloques
+   seguidos. Un candidato se acepta como lema si **cita el versículo**, y basta con una de dos
+   pruebas: que aparezca literal en él (cubre los lemas de una palabra corta como `Set.` o
+   `Bet-el.`), o que al menos el 75% de sus palabras estén allí (cubre contracciones como
+   `Salió Caín.` por *"Salió, pues, Caín de delante de Jehová"*, plurales y erratas del OCR).
+   Ese filtro es el que descarta falsos positivos como `Gr. makários.`
+   El cierre del lema puede ser `.`, `?` o `!`: muchos son preguntas citadas del versículo
+   (`¿Dónde estás tú?`), y exigir punto dejaba 600 comentarios sin encabezado.
+   Resultado: **98,6%** de los comentarios quedan segmentados. El body se guarda con los bloques
    unidos por `\n\n` y `lemma_spans` lleva los `[inicio, longitud]` para ponerlos en negrita.
 
 4. **Cola de Elena G. de White.** 1.063 comentarios terminan con un bloque de referencias
@@ -66,16 +71,18 @@ La base son 43,2 MB (≈24 MB comprimida dentro del AAB). Dos medidas hechas sob
 
 ## Defectos conocidos del material de origen
 
-No se corrigen: alterarlos sería inventar contenido. Son 2 filas de 31.092.
+No se corrigen aquí: alterarlos sería inventar contenido. Se arreglan en Postgres y se vuelve
+a exportar.
 
 - **Job 24:1** contiene el texto de Job 24:11 (`"1 1Dentro de sus paredes…"`: el OCR partió el
-  "11" y el importador leyó el primer "1" como número de versículo). Job 24:11 quedó vacío.
-- **Salmos 101:1** contiene texto de comentario desplazado; el texto real del versículo 1 está
-  en la fila `verse = 0` de ese capítulo.
+  "11" y el importador leyó el primer "1" como número de versículo). Job 24:11 ya se corrigió en
+  el origen, así que ahora ese texto está duplicado en los dos versículos; falta poner en 24:1
+  el suyo (*"¿Por qué no son ocultados los tiempos por el Todopoderoso…"*).
+- ~~Salmos 101:1~~ — corregido en el origen.
 
 Otros rasgos del corpus que **sí** son intencionados y se conservan:
 
-- 19 versículos sin texto que **sí tienen comentario** → la app debe mostrar el comentario igual.
+- 18 versículos sin texto que **sí tienen comentario** → la app debe mostrar el comentario igual.
 - 4 libros sin metadatos de introducción (2 Samuel, 2 Reyes, 2 Crónicas, Nehemías) → `has_intro = 0`.
 - 2 capítulos sin ningún comentario (2 Crónicas 35 y 36).
 - 422 comentarios que son solo remisiones (`"Ver com. vers. 8."`) → `is_crossref = 1`.
