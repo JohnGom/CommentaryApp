@@ -100,7 +100,7 @@ El Desarrollador podrá actualizar esta Política de Privacidad en cualquier mom
 Para cualquier consulta, duda o reclamo relacionado con esta Política de Privacidad, el usuario puede contactar al Desarrollador a través de:
 
 - **Google Play Store:** mediante la sección de comentarios o contacto de la ficha de la aplicación
-- **Correo electrónico:** [correo de contacto del desarrollador]
+- **Correo electrónico:** zemog1916@gmail.com
 
 ## 15. Vigencia
 
