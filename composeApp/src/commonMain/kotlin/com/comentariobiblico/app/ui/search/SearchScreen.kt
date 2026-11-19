@@ -40,6 +40,7 @@ import com.comentariobiblico.app.domain.model.SearchKind
 import com.comentariobiblico.app.domain.model.Snippet
 import com.comentariobiblico.app.domain.model.VerseId
 import com.comentariobiblico.app.ui.common.StateHost
+import com.comentariobiblico.app.ui.common.UiState
 import com.comentariobiblico.app.ui.theme.searchHighlight
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -100,7 +101,7 @@ fun SearchScreen(
                 }
             }
 
-            val counts = (state as? com.comentariobiblico.app.ui.common.UiState.Success)
+            val counts = (state as? UiState.Success)
                 ?.data?.counts
             if (counts != null) {
                 Row(

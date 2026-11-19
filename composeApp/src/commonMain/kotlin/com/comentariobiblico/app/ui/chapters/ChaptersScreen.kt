@@ -30,6 +30,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.comentariobiblico.app.domain.model.Chapter
 import com.comentariobiblico.app.ui.common.NumberCell
 import com.comentariobiblico.app.ui.common.StateHost
+import com.comentariobiblico.app.ui.common.UiState
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,23 +45,17 @@ fun ChaptersScreen(
     LaunchedEffect(bookId) { viewModel.load(bookId) }
     val state by viewModel.state.collectAsStateWithLifecycle()
 
+    val data = (state as? UiState.Success)?.data
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    val title = (state as? com.comentariobiblico.app.ui.common.UiState.Success)
-                        ?.data?.book?.title
-                    Text(title ?: "")
-                },
+                title = { Text(data?.book?.title ?: "") },
                 navigationIcon = {
                     IconButton(onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Atrás") }
                 },
                 actions = {
-                    val book = (state as? com.comentariobiblico.app.ui.common.UiState.Success)
-                        ?.data?.book
-                    // Oculto en 2 Samuel, 2 Reyes, 2 Crónicas y Nehemías, que
-                    // no traen material introductorio.
-                    if (book?.hasIntro == true) {
+                    if (data?.book?.hasIntro == true) {
                         IconButton(onIntro) {
                             Icon(Icons.AutoMirrored.Filled.MenuBook, "Introducción al libro")
                         }

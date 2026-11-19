@@ -256,7 +256,7 @@ class CommentaryDao(private val opening: Deferred<AppDatabase>) {
         val sql = if (highlightQuery == null) {
             "SELECT body, lemma_spans, egw_refs, is_crossref FROM comment WHERE verse_id = ?"
         } else {
-            "SELECT highlight(comment_fts, 0, '$HIGHLIGHT_OPEN', '$HIGHLIGHT_CLOSE'), " +
+            "SELECT highlight(comment_fts, 0, ?, ?), " +
                 "c.lemma_spans, c.egw_refs, c.is_crossref " +
                 "FROM comment_fts JOIN comment c ON c.verse_id = comment_fts.rowid " +
                 "WHERE comment_fts.rowid = ? AND comment_fts MATCH ?"
@@ -266,7 +266,11 @@ class CommentaryDao(private val opening: Deferred<AppDatabase>) {
             sql,
             bind = { statement ->
                 statement.bindLong(1, id.raw.toLong())
-                if (highlightQuery != null) statement.bindText(2, highlightQuery)
+                if (highlightQuery != null) {
+                    statement.bindText(2, HIGHLIGHT_OPEN.toString())
+                    statement.bindText(3, HIGHLIGHT_CLOSE.toString())
+                    statement.bindText(4, highlightQuery)
+                }
             },
         ) { row ->
             Comment(

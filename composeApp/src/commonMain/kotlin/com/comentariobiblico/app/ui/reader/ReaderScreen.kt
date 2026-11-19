@@ -48,6 +48,7 @@ import com.comentariobiblico.app.domain.model.VerseId
 import com.comentariobiblico.app.ui.common.EmptyMessage
 import com.comentariobiblico.app.ui.common.EmptyReason
 import com.comentariobiblico.app.ui.common.StateHost
+import com.comentariobiblico.app.ui.common.UiState
 import com.comentariobiblico.app.ui.theme.LocalReaderTypography
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -70,17 +71,14 @@ fun ReaderScreen(
         viewModel.load(bookId, chapter, verse, query)
     }
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val data = (state as? UiState.Success)?.data
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
-                title = {
-                    val reference = (state as? com.comentariobiblico.app.ui.common.UiState.Success)
-                        ?.data?.current?.verse?.reference
-                    Text(reference ?: "")
-                },
+                title = { Text(data?.current?.verse?.reference ?: "") },
                 navigationIcon = {
                     IconButton(onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Atrás") }
                 },
@@ -91,7 +89,6 @@ fun ReaderScreen(
             )
         },
         bottomBar = {
-            val data = (state as? com.comentariobiblico.app.ui.common.UiState.Success)?.data
             if (data != null) {
                 ReaderBottomBar(
                     reference = data.current.verse.reference,
