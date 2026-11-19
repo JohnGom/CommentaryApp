@@ -38,9 +38,23 @@ fun App() {
         var showSettings by remember { mutableStateOf(false) }
 
         fun openReader(id: VerseId, query: String? = null) {
-            navController.navigate(
-                ReaderRoute(id.bookId, id.chapter, id.verse, query),
-            )
+            navController.navigate(ReaderRoute(id.bookId, id.chapter, id.verse, query))
+        }
+
+        /**
+         * Moverse de versículo con las flechas sustituye la pantalla en vez de
+         * apilarla.
+         *
+         * Si cada paso se apilara, volver atrás después de leer quince
+         * versículos seguidos obligaría a pulsar quince veces para salir del
+         * capítulo. Al sustituir, atrás lleva siempre a donde se entró: la
+         * retícula de versículos, la búsqueda o la tarjeta de continuar.
+         */
+        fun moveReader(id: VerseId, query: String? = null) {
+            navController.navigate(ReaderRoute(id.bookId, id.chapter, id.verse, query)) {
+                popUpTo<ReaderRoute> { inclusive = true }
+                launchSingleTop = true
+            }
         }
 
         NavHost(navController, startDestination = BooksRoute) {
@@ -87,7 +101,10 @@ fun App() {
                     chapter = route.chapter,
                     verse = route.verse,
                     query = route.query,
-                    onNavigate = { openReader(it, route.query) },
+                    onMove = { moveReader(it, route.query) },
+                    // Seguir una cita sí apila: tras leer "Heb. 1: 10" se
+                    // espera volver al comentario desde el que se saltó.
+                    onReference = { openReader(it, route.query) },
                     onSettings = { showSettings = true },
                     onBack = navController::popBackStack,
                 )

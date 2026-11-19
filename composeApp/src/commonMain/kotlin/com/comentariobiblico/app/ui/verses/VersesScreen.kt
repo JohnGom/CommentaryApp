@@ -40,13 +40,12 @@ fun VersesScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val onlyWithComment by viewModel.onlyWithComment.collectAsStateWithLifecycle()
 
+    val data = (state as? UiState.Success)?.data
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    val book = (state as? UiState.Success)?.data?.book?.title
-                    Text(if (book != null) "$book $chapter" else "")
-                },
+                title = { Text(if (data != null) "${data.book.title} $chapter" else "") },
                 navigationIcon = {
                     IconButton(onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Atrás") }
                 },
