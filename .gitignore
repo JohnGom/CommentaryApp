@@ -19,3 +19,7 @@ data/*.db.tmp
 tools/export-db/.venv/
 __pycache__/
 *.pyc
+
+# Recursos de Play Store (generados localmente, no se versionan)
+docs/playstore/
+docs/generate_playstore.py
